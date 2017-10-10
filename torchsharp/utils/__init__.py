@@ -1,3 +1,3 @@
-from . import data, logger, model
+from . import logger
 from .misc import *
 from .timer import Timer
