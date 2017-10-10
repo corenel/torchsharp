@@ -1,17 +1,41 @@
-"""Dataset for frames in single video."""
+"""Several useful dummy dataset."""
 
 import os
 
-import skvideo.io
 import torch.utils.data as data
 
 
-class VideoFrame(data.Dataset):
+class SliceDataset(data.Dataset):
+    """Slice dataset.
+
+    That's useful when you need only a part of one dataset
+    and want to use other sampler on it instead of SubsetRandomSampler.
+    """
+
+    def __init__(self, original_dataset, excerpt):
+        """Init SliceDataset."""
+        super(SliceDataset, self).__init__()
+        self.dataset = original_dataset
+        self.excerpt = excerpt
+        self.imgs = [self.dataset.imgs[idx] for idx in self.excerpt]
+        self.classes = self.dataset.classes
+
+    def __getitem__(self, index):
+        """Get image and target for data loader."""
+        image, label = self.dataset[self.excerpt[index]]
+        return image, label
+
+    def __len__(self):
+        """Return size of dataset."""
+        return len(self.excerpt)
+
+
+class VideoDataset(data.Dataset):
     """Dummy dataset for frames in single video."""
 
     def __init__(self, filepath, transform=None):
-        """Init VideoFrame dataset."""
-        super(VideoFrame, self).__init__()
+        """Init VideoDataset dataset."""
+        super(VideoDataset, self).__init__()
         self.filepath = filepath
         self.num_frames = None
         self.transform = transform
@@ -31,6 +55,7 @@ class VideoFrame(data.Dataset):
 
     def decode(self):
         """Decode frames from video."""
+        import skvideo.io
         if os.path.exists(self.filepath):
             self.frames = skvideo.io.vread(self.filepath)
             # return numpy.ndarray (N x H x W x C)

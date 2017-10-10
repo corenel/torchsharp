@@ -15,7 +15,7 @@ setup(
     version="0.0.1",
     author="Yusu Pan",
     author_email="xxdsox@gmail.com",
-    description="Sharp Utilities for PyTorch",
+    description="Sharp Utilities for PyTorch.",
     long_description=readme,
     license="MIT",
     url="https://github.com/corenel/torchsharp",
