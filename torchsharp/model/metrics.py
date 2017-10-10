@@ -65,7 +65,8 @@ class MultiClassAccMeter(BaseMeter):
         # check size
         assert predicted.size(0) == expected.size(0), \
             "outputs and targets do not match"
-        assert predicted.dim() == 2, "size of outputs must be [N x 1] or [N]"
+        assert predicted.size(1) < self.topk, "predicted classes less than k"
+        assert predicted.dim() == 2, "size of outputs must be [N x k] or [N]"
         assert expected.dim() == 1, "size of targets must be [N]"
 
         return predicted, expected

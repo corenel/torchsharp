@@ -1,2 +1,2 @@
-# torchsharp
-Sharp Utilities for PyTorch.
+# TorchSharp
+A set of sharp utilities for PyTorch.
