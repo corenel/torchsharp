@@ -7,7 +7,7 @@ import torch
 
 
 class BaseProfile(object):
-    """Base class for all profiles."""
+    """Base class for all other profiles."""
 
     def __init__(self):
         """Init profile."""
@@ -145,14 +145,14 @@ class TrainProfile(BaseProfile):
                                  const="lambda",
                                  nargs="?",
                                  choices=["lambda", "step", "multistep",
-                                          "exponential", "plateau"],
+                                          "exp", "plateau"],
                                  help="method for learning rate scheduler"
                                       "(default: %(default)s)")
         self.parser.add_argument("--lr_decay_factor", type=float,
                                  default=0.1,
                                  help="factor to decay every certain epochs")
-        self.parser.add_argument("--lr_decay_epoch", type=int,
-                                 default=30,
+        self.parser.add_argument("--lr_decay_epoch", type=int, default=[30],
+                                 nargs="+",
                                  help="number of epochs to decay lr")
 
         # training process
