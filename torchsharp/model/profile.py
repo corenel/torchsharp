@@ -26,10 +26,6 @@ class BaseProfile(object):
                                  help="indices of gpu to be used")
         self.parser.add_argument("--manual-seed", type=int, default=None,
                                  help="manual random seed")
-        self.parser.add_argument("--phase", type=str,
-                                 default="train", const="train", nargs="?",
-                                 choices=["train", "val", "test"],
-                                 help="process phase (default: %(default)s)")
         # dataset
         self.parser.add_argument("--data-root", type=str, default="data",
                                  required=True,
@@ -70,29 +66,6 @@ class BaseProfile(object):
                                           "sparse"],
                                  help="method for weight initialization"
                                       "(default: %(default)s)")
-        # optimizer
-        self.parser.add_argument("--lr", type=float,
-                                 default=1e-4,
-                                 help="base learning rate for optimizer")
-        self.parser.add_argument("--weight-init",
-                                 default="xavier_normal",
-                                 const="xavier_normal",
-                                 nargs="?",
-                                 choices=["normal", "uniform", "xavier_normal",
-                                          "xavier_uniform", "kaiming_normal",
-                                          "kaiming_uniform", "orthogonal",
-                                          "sparse"],
-                                 help="method for weight initialization"
-                                      "(default: %(default)s)")
-        # training process
-        self.parser.add_argument("--num-epoch", type=int, default=200,
-                                 help="number of optimizing epochs")
-        self.parser.add_argument("--log-step", type=int, default=20,
-                                 help="step to log history")
-        self.parser.add_argument("--val-step", type=int, default=50,
-                                 help="step to validate model")
-        self.parser.add_argument("--save-step", type=int, default=50,
-                                 help="step to save model checkpoint")
 
         # set flag
         self.initialized = True
@@ -103,7 +76,6 @@ class BaseProfile(object):
         if not self.initialized:
             self.init()
         self.cfg = self.parser.parse_args()
-
         # set current gpu device
         torch.cuda.set_device(self.cfg.gpu_ids[0])
 
@@ -126,7 +98,6 @@ class BaseProfile(object):
         filepath = os.path.abspath(filepath)
         if os.path.exist(os.path.dirname(filepath)):
             os.makedirs(os.path.dirname(filepath))
-
         # write config
         cfg_dict = vars(self.cfg)
         with open(filepath, "w") as f:
@@ -147,3 +118,72 @@ class BaseProfile(object):
         else:
             raise IOError("config file not exists in {}"
                           .format(filepath))
+
+
+class TrainProfile(BaseProfile):
+    """Profile for training model."""
+
+    def __init__(self):
+        """Init profile."""
+        super(TrainProfile, self).__init__()
+        self.training = True
+
+    def init(self):
+        """Init arg parser."""
+        BaseProfile.init(self)
+        # general
+        self.parser.add_argument("--phase", type=str,
+                                 default="train", const="train", nargs="?",
+                                 choices=["train", "val", "test"],
+                                 help="process phase (default: %(default)s)")
+        # optimizer
+        self.parser.add_argument("--lr", type=float,
+                                 default=1e-4,
+                                 help="base learning rate for optimizer")
+        self.parser.add_argument("--lr-policy",
+                                 default="lambda",
+                                 const="lambda",
+                                 nargs="?",
+                                 choices=["lambda", "step", "multistep",
+                                          "exponential", "plateau"],
+                                 help="method for learning rate scheduler"
+                                      "(default: %(default)s)")
+        self.parser.add_argument("--lr_decay_factor", type=float,
+                                 default=0.1,
+                                 help="factor to decay every certain epochs")
+        self.parser.add_argument("--lr_decay_epoch", type=int,
+                                 default=30,
+                                 help="number of epochs to decay lr")
+
+        # training process
+        self.parser.add_argument("--num-epoch", type=int, default=200,
+                                 help="number of optimizing epochs")
+        self.parser.add_argument("--log-step", type=int, default=20,
+                                 help="step to log history")
+        self.parser.add_argument("--val-step", type=int, default=50,
+                                 help="step to validate model")
+        self.parser.add_argument("--save-step", type=int, default=50,
+                                 help="step to save model checkpoint")
+
+
+class TestProfile(BaseProfile):
+    """Profile for testing."""
+
+    def __init__(self):
+        """Init profile."""
+        super(TestProfile, self).__init__()
+        self.training = False
+
+    def init(self):
+        """Init arg parser."""
+        BaseProfile.init(self)
+        # general
+        self.parser.add_argument("--phase", type=str,
+                                 default="train", const="train", nargs="?",
+                                 choices=["train", "val", "test"],
+                                 help="process phase (default: %(default)s)")
+        # input
+        self.parser.add_argument("-i", "--input", type=str, default=None,
+                                 help="input file or directory")
+        self.parser.add_argument("-o", "--output", type=str, default="output",
+                                 help="output directory")
