@@ -4,7 +4,15 @@
 This repository consists of:
 
 - [torchsharp.data](#data) : Useful stuff about data operation such as dummy datasets and  image tranforms for data argumentation, etc.
+  - [ ] re-arrange transforms
+
 - [torchsharp.model](#data) : Helpful fucntions about model training process such as initializer and metrics, etc.
+  - [x] configuration profile
+  - [ ] high level model class
+  - [x] weight initializer wrapper
+  - [x] lr scheduler wrapper
+  - [ ] more metrics
+  - [ ] history and tensorboard logger
+  - [ ] optimizer
+
 - [torchsharp.utils](#data) : Other tools like logger and timer, etc.
-
-
