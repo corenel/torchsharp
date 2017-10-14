@@ -54,8 +54,10 @@ class BaseProfile(object):
         self.parser.add_argument("--model-root", type=str, default="data",
                                  required=True,
                                  help="path to model checkpoint folder")
-        self.parser.add_argument("--restore", type=str, default=None,
+        self.parser.add_argument("--restore-file", type=str, default=None,
                                  help="path to model checkpoint to restore")
+        self.parser.add_argument("--restore-epoch", type=str, default=None,
+                                 help="epoch of model checkpoint to restore")
         self.parser.add_argument("--weight-init",
                                  default="xavier_normal",
                                  const="xavier_normal",

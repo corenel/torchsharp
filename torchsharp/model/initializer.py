@@ -3,6 +3,9 @@
 partly referenced from:
 https://github.com/junyanz/pytorch-CycleGAN-and-pix2pix/blob/master/models/networks.py
 """
+
+from functools import partial
+
 from torch import nn
 
 
@@ -124,3 +127,8 @@ def init_network_weights(net, init_type="normal"):
     else:
         raise NotImplementedError(
             "not-implemented initialization method {}".format(init_type))
+
+
+def get_initializer(init_type="normal"):
+    """Get weight initializer."""
+    return partial(init_network_weights, init_type=init_type)
