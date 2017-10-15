@@ -157,6 +157,18 @@ class BaseModel(object):
         for idx, net in enumerate(self.networks):
             self.restore_network(net, self.network_names[idx], epoch=epoch)
 
+    def print_network(self, net):
+        """Print the architecture of network.
+
+        Args:
+            net (torch.nn.Module): Network object to be printed.
+        """
+        num_params = 0
+        for param in net.parameters():
+            num_params += param.numel()
+        print(net)
+        print("Total number of parameters: {}".format(num_params))
+
     def forward(self, input=None):
         """Forward network with input."""
         raise NotImplementedError(
