@@ -20,7 +20,6 @@ setup(
     license="MIT",
     url="https://github.com/corenel/torchsharp",
     # Package info
-    packages=find_packages(exclude=('test',)),
+    packages=find_packages(exclude=('test', )),
     zip_safe=True,
-    install_requires=requirements,
-)
+    install_requires=requirements, )

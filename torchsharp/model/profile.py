@@ -16,58 +16,92 @@ class BaseProfile(object):
         self.cfg = None
         self.initialized = False
 
-    def init(self):
+    def initialize(self):
         """Init arg parser."""
         # general
-        self.parser.add_argument("--name", type=str, default="exp",
-                                 help="name of experiment")
-        self.parser.add_argument("--gpu_ids", type=int, default=[0],
-                                 nargs="+",
-                                 help="indices of gpu to be used")
-        self.parser.add_argument("--manual-seed", type=int, default=None,
-                                 help="manual random seed")
+        self.parser.add_argument(
+            "--name", type=str, default="exp", help="name of experiment")
+        self.parser.add_argument(
+            "--gpu_ids",
+            type=int,
+            default=[0],
+            nargs="+",
+            help="indices of gpu to be used")
+        self.parser.add_argument(
+            "--manual-seed", type=int, default=None, help="manual random seed")
         # dataset
-        self.parser.add_argument("--data-root", type=str, default="data",
-                                 required=True,
-                                 help="path to data root folder")
-        self.parser.add_argument("--data-mean", type=float,
-                                 default=[0.485, 0.456, 0.406],
-                                 nargs=3, metavar=("R", "G", "B"),
-                                 help="mean value of images in dataset")
-        self.parser.add_argument("--data-std", type=float,
-                                 default=[0.229, 0.224, 0.225],
-                                 nargs=3, metavar=("R", "G", "B"),
-                                 help="std value of images in dataset")
-        self.parser.add_argument("--load-size", type=int,
-                                 default=[256, 256],
-                                 nargs=2, metavar=("height", "width"),
-                                 help="image size for loading (to be cropped)")
-        self.parser.add_argument("--image-size", type=int,
-                                 default=[224, 224],
-                                 nargs=2, metavar=("height", "width"),
-                                 help="image size of network input")
-        self.parser.add_argument("--batch-size", type=int, default=64,
-                                 help="batch size for data loader")
-        self.parser.add_argument("--num-workers", type=int, default=1,
-                                 help="number of workers for data loader")
+        self.parser.add_argument(
+            "--data-root",
+            type=str,
+            default="data",
+            required=True,
+            help="path to data root folder")
+        self.parser.add_argument(
+            "--data-mean",
+            type=float,
+            default=[0.485, 0.456, 0.406],
+            nargs=3,
+            metavar=("R", "G", "B"),
+            help="mean value of images in dataset")
+        self.parser.add_argument(
+            "--data-std",
+            type=float,
+            default=[0.229, 0.224, 0.225],
+            nargs=3,
+            metavar=("R", "G", "B"),
+            help="std value of images in dataset")
+        self.parser.add_argument(
+            "--load-size",
+            type=int,
+            default=[256, 256],
+            nargs=2,
+            metavar=("height", "width"),
+            help="image size for loading (to be cropped)")
+        self.parser.add_argument(
+            "--image-size",
+            type=int,
+            default=[224, 224],
+            nargs=2,
+            metavar=("height", "width"),
+            help="image size of network input")
+        self.parser.add_argument(
+            "--batch-size",
+            type=int,
+            default=64,
+            help="batch size for data loader")
+        self.parser.add_argument(
+            "--num-workers",
+            type=int,
+            default=1,
+            help="number of workers for data loader")
         # model
-        self.parser.add_argument("--model-root", type=str, default="data",
-                                 required=True,
-                                 help="path to model checkpoint folder")
-        self.parser.add_argument("--restore-file", type=str, default=None,
-                                 help="path to model checkpoint to restore")
-        self.parser.add_argument("--restore-epoch", type=str, default=None,
-                                 help="epoch of model checkpoint to restore")
-        self.parser.add_argument("--weight-init",
-                                 default="xavier_normal",
-                                 const="xavier_normal",
-                                 nargs="?",
-                                 choices=["normal", "uniform", "xavier_normal",
-                                          "xavier_uniform", "kaiming_normal",
-                                          "kaiming_uniform", "orthogonal",
-                                          "sparse"],
-                                 help="method for weight initialization"
-                                      "(default: %(default)s)")
+        self.parser.add_argument(
+            "--model-root",
+            type=str,
+            default="data",
+            required=True,
+            help="path to model checkpoint folder")
+        # self.parser.add_argument(
+        #     "--restore-file",
+        #     type=str,
+        #     default=None,
+        #     help="path to model checkpoint to restore")
+        self.parser.add_argument(
+            "--restore-epoch",
+            type=str,
+            default=None,
+            help="epoch of model checkpoint to restore")
+        self.parser.add_argument(
+            "--init-type",
+            default="xavier_normal",
+            const="xavier_normal",
+            nargs="?",
+            choices=[
+                "normal", "uniform", "xavier_normal", "xavier_uniform",
+                "kaiming_normal", "kaiming_uniform", "orthogonal", "sparse"
+            ],
+            help="method for weight initialization"
+            "(default: %(default)s)")
 
         # set flag
         self.initialized = True
@@ -79,8 +113,10 @@ class BaseProfile(object):
             self.init()
         self.cfg = self.parser.parse_args()
         # set current gpu device
-        torch.cuda.set_device(self.cfg.gpu_ids[0])
-
+        if torch.cuda.is_available():
+            torch.cuda.set_device(self.cfg.gpu_ids[0])
+        else:
+            self.cfg.gpu_ids = []
         return self.cfg
 
     def show(self):
@@ -118,8 +154,7 @@ class BaseProfile(object):
             self.initialized = True
             print("load current config from {}".format(filepath))
         else:
-            raise IOError("config file not exists in {}"
-                          .format(filepath))
+            raise IOError("config file not exists in {}".format(filepath))
 
 
 class TrainProfile(BaseProfile):
@@ -130,42 +165,74 @@ class TrainProfile(BaseProfile):
         super(TrainProfile, self).__init__()
         self.training = True
 
-    def init(self):
+    def initialize(self):
         """Init arg parser."""
-        BaseProfile.init(self)
+        BaseProfile.initialize(self)
         # general
-        self.parser.add_argument("--phase", type=str,
-                                 default="train", const="train", nargs="?",
-                                 choices=["train", "val", "test"],
-                                 help="process phase (default: %(default)s)")
+        self.parser.add_argument(
+            "--phase",
+            type=str,
+            default="train",
+            const="train",
+            nargs="?",
+            choices=["train", "val", "test"],
+            help="process phase (default: %(default)s)")
+
         # optimizer
-        self.parser.add_argument("--lr", type=float,
-                                 default=1e-4,
-                                 help="base learning rate for optimizer")
-        self.parser.add_argument("--lr-policy",
-                                 default="lambda",
-                                 const="lambda",
-                                 nargs="?",
-                                 choices=["lambda", "step", "multistep",
-                                          "exp", "plateau"],
-                                 help="method for learning rate scheduler"
-                                      "(default: %(default)s)")
-        self.parser.add_argument("--lr_decay_factor", type=float,
-                                 default=0.1,
-                                 help="factor to decay every certain epochs")
-        self.parser.add_argument("--lr_decay_epoch", type=int, default=[30],
-                                 nargs="+",
-                                 help="number of epochs to decay lr")
+        self.parser.add_argument(
+            "--lr",
+            type=float,
+            default=1e-4,
+            help="base learning rate for optimizer")
+        self.parser.add_argument(
+            "--optimizer",
+            default="adam",
+            const="adam",
+            nargs="?",
+            choices=["adam"],
+            help="type of optimizer")
+        self.parser.add_argument(
+            "--beta1",
+            type=float,
+            default=0.5,
+            help="momentum term of adam optimizer")
+
+        # lr scheduler
+        self.parser.add_argument(
+            "--lr-policy",
+            default="lambda",
+            const="lambda",
+            nargs="?",
+            choices=["lambda", "step", "multistep", "exp", "plateau"],
+            help="method for learning rate scheduler"
+            "(default: %(default)s)")
+        self.parser.add_argument(
+            "--lr_decay_factor",
+            type=float,
+            default=0.1,
+            help="factor to decay every certain epochs")
+        self.parser.add_argument(
+            "--lr_decay_epoch",
+            type=int,
+            default=[30],
+            nargs="+",
+            help="number of epochs to decay lr")
 
         # training process
-        self.parser.add_argument("--num-epoch", type=int, default=200,
-                                 help="number of optimizing epochs")
-        self.parser.add_argument("--log-step", type=int, default=20,
-                                 help="step to log history")
-        self.parser.add_argument("--val-step", type=int, default=50,
-                                 help="step to validate model")
-        self.parser.add_argument("--save-step", type=int, default=50,
-                                 help="step to save model checkpoint")
+        self.parser.add_argument(
+            "--num-epoch",
+            type=int,
+            default=200,
+            help="number of optimizing epochs")
+        self.parser.add_argument(
+            "--log-step", type=int, default=20, help="step to log history")
+        self.parser.add_argument(
+            "--val-step", type=int, default=50, help="step to validate model")
+        self.parser.add_argument(
+            "--save-step",
+            type=int,
+            default=50,
+            help="step to save model checkpoint")
 
 
 class TestProfile(BaseProfile):
@@ -176,16 +243,28 @@ class TestProfile(BaseProfile):
         super(TestProfile, self).__init__()
         self.training = False
 
-    def init(self):
+    def initialize(self):
         """Init arg parser."""
-        BaseProfile.init(self)
+        BaseProfile.initialize(self)
         # general
-        self.parser.add_argument("--phase", type=str,
-                                 default="train", const="train", nargs="?",
-                                 choices=["train", "val", "test"],
-                                 help="process phase (default: %(default)s)")
+        self.parser.add_argument(
+            "--phase",
+            type=str,
+            default="train",
+            const="train",
+            nargs="?",
+            choices=["train", "val", "test"],
+            help="process phase (default: %(default)s)")
         # input
-        self.parser.add_argument("-i", "--input", type=str, default=None,
-                                 help="input file or directory")
-        self.parser.add_argument("-o", "--output", type=str, default="output",
-                                 help="output directory")
+        self.parser.add_argument(
+            "-i",
+            "--input",
+            type=str,
+            default=None,
+            help="input file or directory")
+        self.parser.add_argument(
+            "-o",
+            "--output",
+            type=str,
+            default="output",
+            help="output directory")

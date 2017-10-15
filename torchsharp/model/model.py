@@ -4,30 +4,91 @@ import os
 
 import torch
 
+from .initializer import get_initializer
+from .lr_scheduler import get_scheduler
+from .optimizer import get_optimizer
+
 
 class BaseModel(object):
-    """Base class for all other models."""
+    """Base class for all other models.
+
+    Subclass should define networks, optimizers, schedulers, criterions
+    and metrics by re-implementing initialize() method.
+    """
 
     def __init__(self):
         """Init model."""
         super(BaseModel, self).__init__()
         self.name = "BaseModel"
         self.cfg = None
-        self.networks = []  # network name list
+        self.networks = []
+        self.network_names = []
         self.optimizers = []
-        self.lr_schedulers = []
-        self.initializers = []
+        self.criterions = []
+        self.schedulers = []
+        self.initializer = None
         self.metrics = None
 
-    def init(self, net_dict, cfg):
+    def initialize(self, cfg):
         """Init model with network and config.
 
         Args:
-            net_dict (dict): A dict of network name and object.
             cfg (object): Profile configuration.
         """
-        raise NotImplementedError(
-            "custom Model class must implement this method")
+        self.cfg = cfg
+        self.gpu_ids = cfg.gpu_ids
+        self.training = cfg.training
+        self.initializer = get_initializer(cfg.init_type)
+
+    def setup_network(self, net, net_name, epoch=None, init=False):
+        """Setup network and add it to model.
+
+        Args:
+            net (torch.nn.Module): Network object.
+            net_name (str): Network name.
+            epoch (int, optional): Epoch number to find network checkpoint.
+            init (bool, optional): Whether to init weigths of network.
+        """
+        if epoch is not None:
+            self.restore_network(net, net_name, epoch)
+        if init:
+            self.initializer(net)
+        if torch.cuda.is_available():
+            net.cuda()
+        self.add_network(net, net_name)
+
+    def setup_optimizer(self, net, optim_type=None):
+        """Setup optimizer for network.
+
+        Args:
+            net (torch.nn.Module): Network object.
+            optim_type (str): optimizer type.
+        """
+        if optim_type is None:
+            optim_type = self.cfg.optimizer
+        optimizer = get_optimizer(net.parameters(), optim_type)
+        self.optimizers.append(optimizer)
+        self.setup_scheduler(optimizer)
+
+    def setup_optimizers(self, optim_type=None):
+        """Setup optimizer for all networks in model.
+
+        Args:
+            net (torch.nn.Module): Network object.
+            optim_type (str): optimizer type.
+        """
+        if optim_type is None:
+            optim_type = self.cfg.optimizer
+        for net in self.networks:
+            self.setup_optimizer(net, optim_type)
+
+    def setup_scheduler(self, optimizer):
+        """Setup lr scheduler for network.
+
+        Args:
+            optimizer (torch.optim.Optimizer): Optimizer for network.
+        """
+        self.schedulers.append(get_optimizer(optimizer, self.cfg))
 
     def add_network(self, net, net_name):
         """Add network object to model.
@@ -36,18 +97,9 @@ class BaseModel(object):
             net (torch.nn.Module): Network object.
             net_name (str): Network name.
         """
-        if net_name not in self.networks:
-            self.networks.append(net_name)
+        self.networks.append(net)
+        self.network_names.append(net_name)
         setattr(self, net_name, net)
-
-    def add_networks(self, net_dict):
-        """Add networks to model.
-
-        Args:
-            net_dict (dict): A dict of network name and object.
-        """
-        for net_name, net in net_dict.items():
-            self.add_network(net_name, net)
 
     def save_network(self, epoch, net, net_name):
         """Save network checkpoint.
@@ -65,18 +117,14 @@ class BaseModel(object):
         torch.save(net.state_dict(), filepath)
         print("save network {} to {}".format(net_name, filepath))
 
-    def save_networks(self, epoch, net_names=None):
-        """Save networks in model.
+    def save_networks(self, epoch):
+        """Save all networks in model.
 
         Args:
             epoch (int): Current epoch number.
-            net_names (list, optinal): A list of names of networks to be saved.
         """
-        if net_names is None:
-            net_names = self.networks
-        for net_name in net_names.items():
-            net = getattr(self, net_name)
-            self.save_network(epoch, net, net_name)
+        for idx, net in enumerate(self.networks):
+            self.save_network(epoch, net, self.network_names[idx])
 
     def restore_network(self, net, net_name, epoch=None, filepath=None):
         """Restore network checkpoint.
@@ -100,18 +148,14 @@ class BaseModel(object):
             net.restored = True
             print("restore network {} from {}".format(net_name, filepath))
 
-    def restore_networks(self, epoch, net_names=None):
-        """Restore networks in model.
+    def restore_networks(self, epoch):
+        """Restore all networks in model.
 
         Args:
             epoch (int): Current epoch number.
-            net_names (list, optinal): A list of names of nets to be loaded.
         """
-        if net_names is None:
-            net_names = self.networks
-        for net_name in net_names:
-            net = getattr(self, net_name)
-            self.restore_network(net, net_name, epoch=epoch)
+        for idx, net in enumerate(self.networks):
+            self.restore_network(net, self.network_names[idx], epoch=epoch)
 
     def forward(self, input=None):
         """Forward network with input."""

@@ -62,5 +62,4 @@ class VideoDataset(data.Dataset):
             self.frames = skvideo.utils.vshape(self.frames)
             self.num_frames = self.frames.shape[0]
         else:
-            raise IOError("video file doesn't exist: {}"
-                          .format(self.filepath))
+            raise IOError("video file doesn't exist: {}".format(self.filepath))

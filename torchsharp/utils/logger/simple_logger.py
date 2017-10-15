@@ -19,7 +19,8 @@ class SimpleLogger(object):
         "critical": logging.CRITICAL,
     }
 
-    def __init__(self, name="project",
+    def __init__(self,
+                 name="project",
                  level=logging.INFO,
                  colorized=True,
                  save_log=True,
