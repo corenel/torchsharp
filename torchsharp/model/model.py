@@ -88,7 +88,7 @@ class BaseModel(object):
         Args:
             optimizer (torch.optim.Optimizer): Optimizer for network.
         """
-        self.schedulers.append(get_optimizer(optimizer, self.cfg))
+        self.schedulers.append(get_scheduler(optimizer, self.cfg))
 
     def add_network(self, net, net_name):
         """Add network object to model.

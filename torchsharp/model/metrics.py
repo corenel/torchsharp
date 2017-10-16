@@ -91,4 +91,7 @@ class MultiClassAccMeter(BaseMeter):
 
     def average(self):
         """Get average of all metrics."""
-        return 100. * self.num_correct / self.num_total
+        if self.num_total == 0:
+            return 0
+        else:
+            return 100. * self.num_correct / self.num_total
