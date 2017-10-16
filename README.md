@@ -3,8 +3,7 @@
 
 This repository consists of:
 
-- [torchsharp.data](#data) : Useful stuff about data operation such as dummy datasets and  image tranforms for data argumentation, etc.
-  - [ ] re-arrange transforms
+- [torchsharp.data](#data) : Useful stuff about data operation such as dummy datasets and image transforms for data argumentation, etc.
 
 - [torchsharp.model](#data) : Helpful fucntions about model training process such as initializer and metrics, etc.
   - [x] configuration profile
