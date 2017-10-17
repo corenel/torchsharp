@@ -1,6 +1,9 @@
 # trash
 .DS_Store
 
+# VSCode
+.vscode
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
