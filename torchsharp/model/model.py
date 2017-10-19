@@ -21,6 +21,8 @@ class BaseModel(object):
         super(BaseModel, self).__init__()
         self.name = "BaseModel"
         self.cfg = None
+        self.gpu_ids = None
+        self.training = None
         self.networks = []
         self.network_names = []
         self.optimizers = []
@@ -41,7 +43,7 @@ class BaseModel(object):
         self.initializer = get_initializer(cfg.init_type)
 
     def setup_network(self, net, net_name, epoch=None, init=False):
-        """Setup network and add it to model.
+        """To setup network and add it to model.
 
         Args:
             net (torch.nn.Module): Network object.
@@ -58,7 +60,7 @@ class BaseModel(object):
         self.add_network(net, net_name)
 
     def setup_optimizer(self, net, optim_type=None):
-        """Setup optimizer for network.
+        """To setup optimizer for network.
 
         Args:
             net (torch.nn.Module): Network object.
@@ -71,7 +73,7 @@ class BaseModel(object):
         self.setup_scheduler(optimizer)
 
     def setup_optimizers(self, optim_type=None):
-        """Setup optimizer for all networks in model.
+        """To setup optimizer for all networks in model.
 
         Args:
             net (torch.nn.Module): Network object.
@@ -83,7 +85,7 @@ class BaseModel(object):
             self.setup_optimizer(net, optim_type)
 
     def setup_scheduler(self, optimizer):
-        """Setup lr scheduler for network.
+        """To setup lr scheduler for network.
 
         Args:
             optimizer (torch.optim.Optimizer): Optimizer for network.
@@ -157,19 +159,7 @@ class BaseModel(object):
         for idx, net in enumerate(self.networks):
             self.restore_network(net, self.network_names[idx], epoch=epoch)
 
-    def print_network(self, net):
-        """Print the architecture of network.
-
-        Args:
-            net (torch.nn.Module): Network object to be printed.
-        """
-        num_params = 0
-        for param in net.parameters():
-            num_params += param.numel()
-        print(net)
-        print("Total number of parameters: {}".format(num_params))
-
-    def forward(self, input=None):
+    def forward(self):
         """Forward network with input."""
         raise NotImplementedError(
             "custom Model class must implement this method")

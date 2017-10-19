@@ -9,6 +9,6 @@ class BaseMonitor(object):
         super(BaseMonitor, self).__init__()
 
     def log(self, record):
-        """Writing a log in monitor."""
+        """Write a log in monitor."""
         raise NotImplementedError(
             "custom subclass should implement this method")
