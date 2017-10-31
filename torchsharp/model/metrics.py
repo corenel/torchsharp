@@ -9,10 +9,6 @@ from torch.autograd import Variable
 class BaseMeter(object):
     """Base class for all meters."""
 
-    def __init__(self):
-        """Init meter."""
-        super(BaseMeter, self).__init__()
-
     def parse(self, outputs, targets):
         """Parse outputs and targets."""
         raise NotImplementedError(

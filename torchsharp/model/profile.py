@@ -6,18 +6,73 @@ import os
 import torch
 
 
-class BaseProfile(object):
-    """Base class for all other profiles."""
+class PlainProfile(object):
+    """A Plain Template for Profile.
+
+    Can be used not only in training models.
+    """
 
     def __init__(self):
-        """Init profile."""
-        super(BaseProfile, self).__init__()
+        """Init Profile. """
         self.parser = argparse.ArgumentParser()
         self.cfg = None
         self.initialized = False
 
     def initialize(self):
         """Init arg parser."""
+        pass
+
+    def parse(self):
+        """Parse profile."""
+        # parge args
+        if not self.initialized:
+            self.initialize()
+        self.cfg = self.parser.parse_args()
+
+    def show(self):
+        """Print current config."""
+        cfg_dict = vars(self.cfg)
+        print("--- current config ---")
+        for k, v in cfg_dict.items():
+            print("{}:{}".format(str(k), str(v)))
+        print("---")
+
+    def save(self, filepath=None):
+        """Save current config."""
+        # check path
+        if filepath is None:
+            filepath = os.path.join(self.cfg.model_root, self.cfg.name,
+                                    "{}.cfg".format(self.cfg.name))
+        filepath = os.path.abspath(filepath)
+        if os.path.exist(os.path.dirname(filepath)):
+            os.makedirs(os.path.dirname(filepath))
+        # write config
+        cfg_dict = vars(self.cfg)
+        with open(filepath, "w") as f:
+            for k, v in cfg_dict.items():
+                f.write("{}:{}\n".format(str(k), str(v)))
+        torch.save(self.cfg, "{}.pt".format(filepath))
+        print("save current config to {}".format(filepath))
+
+    def load(self, filepath=None):
+        """Load saved config."""
+        if filepath is None:
+            filepath = os.path.join(self.cfg.model_root, self.cfg.name,
+                                    "{}.cfg.pt".format(self.cfg.name))
+        if os.path.exists(filepath):
+            self.cfg = torch.load(filepath)
+            self.initialized = True
+            print("load current config from {}".format(filepath))
+        else:
+            raise IOError("config file not exists in {}".format(filepath))
+
+
+class BaseProfile(PlainProfile):
+    """Base class for all other profiles in training models."""
+
+    def initialize(self):
+        """Init arg parser."""
+        PlainProfile.initialize(self)
         # general
         self.parser.add_argument(
             "--name", type=str, default="exp", help="name of experiment")
@@ -108,53 +163,13 @@ class BaseProfile(object):
 
     def parse(self):
         """Parse profile."""
-        # parge args
-        if not self.initialized:
-            self.init()
-        self.cfg = self.parser.parse_args()
+        PlainProfile.parse(self)
         # set current gpu device
         if torch.cuda.is_available():
             torch.cuda.set_device(self.cfg.gpu_ids[0])
         else:
             self.cfg.gpu_ids = []
         return self.cfg
-
-    def show(self):
-        """Print current config."""
-        cfg_dict = vars(self.cfg)
-        print("--- current config ---")
-        for k, v in cfg_dict.items():
-            print("{}:{}".format(str(k), str(v)))
-        print("---")
-
-    def save(self, filepath=None):
-        """Save current config."""
-        # check path
-        if filepath is None:
-            filepath = os.path.join(self.cfg.model_root, self.cfg.name,
-                                    "{}.cfg".format(self.cfg.name))
-        filepath = os.path.abspath(filepath)
-        if os.path.exist(os.path.dirname(filepath)):
-            os.makedirs(os.path.dirname(filepath))
-        # write config
-        cfg_dict = vars(self.cfg)
-        with open(filepath, "w") as f:
-            for k, v in cfg_dict.items():
-                f.write("{}:{}\n".format(str(k), str(v)))
-        torch.save(self.cfg, "{}.pt".format(filepath))
-        print("save current config to {}".format(filepath))
-
-    def load(self, filepath=None):
-        """Load saved config."""
-        if filepath is None:
-            filepath = os.path.join(self.cfg.model_root, self.cfg.name,
-                                    "{}.cfg.pt".format(self.cfg.name))
-        if os.path.exists(filepath):
-            self.cfg = torch.load(filepath)
-            self.initialized = True
-            print("load current config from {}".format(filepath))
-        else:
-            raise IOError("config file not exists in {}".format(filepath))
 
 
 class TrainProfile(BaseProfile):

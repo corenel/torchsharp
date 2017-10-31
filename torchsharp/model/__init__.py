@@ -1,2 +1,2 @@
 from . import metrics
-from ._utils import *
+from ._utils import print_network
